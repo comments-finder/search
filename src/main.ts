@@ -14,7 +14,10 @@ const rmqOptions: RmqOptions = {
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-      AppModule
+      AppModule,
+      {
+          logger: process.env.NODE_ENV === 'development' ? ['log', 'debug', 'error', 'verbose', 'warn'] : ['error', 'warn'],
+      }
   );
   await app.listen();
 }
