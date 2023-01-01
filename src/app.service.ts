@@ -24,4 +24,36 @@ export class AppService {
       })
     }
   }
+
+  async getComments(query: string) {
+    const words = query.split(' ');
+
+    const clauses = words.map(word => ({
+      span_multi: {
+        match: {
+          fuzzy: {
+            text: {
+              value: word,
+              fuzziness: 1,
+            }
+          }
+        }
+      }
+    }));
+
+    const result = await this.elasticsearchService.search({
+      index: 'comments',
+      query: {
+        span_near: {
+          clauses,
+          slop: 12,
+          in_order: false
+        },
+      },
+    });
+
+    const commnets = result.hits.hits.map((item) => item._source);
+
+    return commnets;
+  }
 }
