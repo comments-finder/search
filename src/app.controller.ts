@@ -23,11 +23,14 @@ export class AppController {
   public async newComments(data: string) {
     try {
       await this.appService.saveComments(
-        JSON.parse(data).map((comment) => ({
-          text: comment.text,
-          articleLink: comment.articleLink,
-          articleTitle: comment.articleTitle,
-        })),
+        (JSON.parse(data) as Comment[]).map<Comment>(
+          ({ text, articleLink, articleTitle, publicationDate }) => ({
+            text,
+            articleLink,
+            articleTitle,
+            publicationDate,
+          }),
+        ),
       );
       this.logger.log(`Message "new-comments" handled successfully`);
       return 'Message delivered';
@@ -47,7 +50,7 @@ export class AppController {
       durable: true,
     },
   })
-  public async newCommentsDlq(data: Comment[]) {
+  public async newCommentsDlq() {
     try {
       this.logger.log(`Message "new-comments-dlq" handled successfully`);
       return 'Message delivered in DLQ';

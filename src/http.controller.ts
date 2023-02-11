@@ -1,3 +1,4 @@
+import { SortOrder } from '@elastic/elasticsearch/lib/api/types';
 import { Controller, Get, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AppService } from './app.service';
@@ -8,13 +9,15 @@ export class HttpController {
 
   @Get('search')
   async findAll(@Req() request: Request, @Res() response: Response) {
-    const { q: query } = request.query;
+    const { q: query, from, sort } = request.query;
 
-    if (!query || typeof query !== 'string') {
-      return response.status(400).end();
-    }
-
-    const comments = await this.appService.getComments(query);
+    const comments = await this.appService.getComments(
+      query ? (query as string) : undefined,
+      sort ? (sort as SortOrder) : undefined,
+      Number.isInteger(parseInt(from as string))
+        ? parseInt(from as string)
+        : undefined,
+    );
 
     response.json(comments);
   }
