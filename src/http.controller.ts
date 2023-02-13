@@ -12,9 +12,11 @@ export class HttpController {
     const { q: query, from, sort } = request.query;
 
     const comments = await this.appService.getComments(
-      query ? (query as string) : undefined,
-      sort ? (sort as SortOrder) : undefined,
-      Number.isInteger(parseInt(from as string))
+      query && typeof query === 'string' ? (query as string) : undefined,
+      sort && (sort === 'asc' || sort === 'desc')
+        ? (sort as SortOrder)
+        : undefined,
+      from && Number.isInteger(parseInt(from as string))
         ? parseInt(from as string)
         : undefined,
     );

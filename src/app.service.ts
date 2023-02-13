@@ -7,7 +7,7 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import * as crypto from 'crypto';
-import { ROWS_PER_SEARCH } from './config';
+import { DEFAULT_SORT, ROWS_PER_SEARCH } from './config';
 
 export interface Comment {
   text: string;
@@ -46,7 +46,7 @@ export class AppService {
     }
   }
 
-  async getComments(query = '', sort: SortOrder = 'desc', from: integer = 0) {
+  async getComments(query = '', sort = DEFAULT_SORT, from = 0) {
     const words = query.split(' ');
 
     const clauses = words.map((word) => ({
