@@ -46,7 +46,12 @@ export class AppService {
     }
   }
 
-  async getComments(query = '', sort = DEFAULT_SORT, from = 0) {
+  async getComments(
+    query = '',
+    sort = DEFAULT_SORT,
+    from = 0,
+    publicationDateRange?: [string, string],
+  ) {
     const words = query.split(' ');
 
     const clauses = words.map((word) => ({
@@ -83,6 +88,14 @@ export class AppService {
         match_all: {},
       };
     }
+
+    if (publicationDateRange)
+      params.query.range = {
+        publicationDate: {
+          gte: publicationDateRange[0],
+          lte: publicationDateRange[1],
+        },
+      };
 
     const result = await this.elasticsearchService.search(params);
 
