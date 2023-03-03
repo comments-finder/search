@@ -1,23 +1,32 @@
 import { SortOrder } from '@elastic/elasticsearch/lib/api/types';
-import { Controller, Get, Req, Res } from '@nestjs/common';
+import { Controller, Get, Logger, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-import moment from 'moment';
+import * as moment from 'moment';
 import { AppService } from './app.service';
 
 @Controller()
 export class HttpController {
+  private readonly logger = new Logger(AppService.name);
   constructor(private readonly appService: AppService) {}
 
   private isPublicationDateRangeValid(
     publicationDateFrom?: string,
     publicationDateTo?: string,
   ) {
-    if (
+    const fromIsValid =
       !publicationDateFrom ||
+      moment(publicationDateFrom, 'YYYY-MM-DDTHH:mm:ssZ', true).isValid();
+
+    const toIsValid =
       !publicationDateTo ||
-      isNaN(new Date(publicationDateFrom).getTime()) ||
-      isNaN(new Date(publicationDateTo).getTime()) ||
-      publicationDateTo < publicationDateFrom
+      moment(publicationDateTo, 'YYYY-MM-DDTHH:mm:ssZ', true).isValid();
+
+    if (
+      !fromIsValid ||
+      !toIsValid ||
+      (publicationDateFrom &&
+        publicationDateTo &&
+        publicationDateTo < publicationDateFrom)
     )
       return false;
 
@@ -28,28 +37,42 @@ export class HttpController {
   async findAll(@Req() request: Request, @Res() response: Response) {
     const {
       q: query,
-      from,
+      source,
+      page,
       sort,
       publicationDateFrom,
       publicationDateTo,
     } = request.query;
 
-    const publicationDateRange = this.isPublicationDateRangeValid(
+    const publicationDateRangeIsValid = this.isPublicationDateRangeValid(
       publicationDateFrom as string,
       publicationDateTo as string,
-    )
-      ? [publicationDateFrom, publicationDateTo]
+    );
+
+    const publicationDateRange = publicationDateRangeIsValid
+      ? {
+          from: publicationDateFrom as string,
+          to: publicationDateTo as string,
+        }
       : null;
+
+    if (!publicationDateRangeIsValid)
+      this.logger.debug(
+        `Publication date range is invalid publicationDateFrom: ${publicationDateFrom} publicationDateTo: ${publicationDateTo}`,
+      );
 
     const comments = await this.appService.getComments(
       query && typeof query === 'string' ? (query as string) : undefined,
+      source === 'blind' || source === 'dou' ? source : undefined,
       sort && (sort === 'asc' || sort === 'desc')
         ? (sort as SortOrder)
         : undefined,
-      from && Number.isInteger(parseInt(from as string))
-        ? parseInt(from as string)
+      page &&
+        Number.isInteger(parseInt(page as string)) &&
+        parseInt(page as string) >= 0
+        ? parseInt(page as string)
         : undefined,
-      publicationDateRange
+      publicationDateRange,
     );
 
     response.json(comments);

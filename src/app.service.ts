@@ -1,22 +1,16 @@
 import {
-  integer,
+  QueryDslQueryContainer,
+  QueryDslRangeQuery,
   SearchRequest,
   SearchTotalHits,
-  SortOrder,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import * as crypto from 'crypto';
-import { DEFAULT_SORT, ROWS_PER_SEARCH } from './config';
+import { DEFAULT_SORT, PAGING_ITEMS_PER_PAGE } from './config';
+import { Comment } from './types';
 
-export interface Comment {
-  text: string;
-  articleLink: string;
-  articleTitle: string;
-  publicationDate: Date;
-}
-
-const rowsPerSearch = parseInt(ROWS_PER_SEARCH);
+const rowsPerSearch = parseInt(PAGING_ITEMS_PER_PAGE);
 
 @Injectable()
 export class AppService {
@@ -24,13 +18,16 @@ export class AppService {
   constructor(private readonly elasticsearchService: ElasticsearchService) {}
 
   async saveComments(comments: Comment[]) {
+    const result = { total: comments.length };
+
     for (const {
       text,
       articleLink,
       articleTitle,
       publicationDate,
+      source,
     } of comments) {
-      await this.elasticsearchService.index({
+      const response = await this.elasticsearchService.index({
         index: 'comments',
         id: crypto
           .createHash('md5')
@@ -41,17 +38,43 @@ export class AppService {
           articleLink,
           articleTitle,
           publicationDate,
+          source,
         },
       });
+
+      result[response.result] =
+        result[response.result] === undefined ? 1 : result[response.result] + 1;
     }
+    return result;
   }
 
   async getComments(
     query = '',
+    source: string,
     sort = DEFAULT_SORT,
-    from = 0,
-    publicationDateRange?: [string, string],
-  ) {
+    page,
+    publicationDateRange?: { from: string; to: string },
+  ): Promise<{
+    result: Comment[];
+    loadMoreActive: boolean;
+    total?: number;
+    perPage?: number;
+  }> {
+    const getTotalExact = page !== undefined;
+
+    const params: SearchRequest = {
+      index: 'comments',
+      sort: { publicationDate: sort },
+      size: rowsPerSearch,
+      from: (page || 0) * rowsPerSearch,
+      track_total_hits: getTotalExact ? true : rowsPerSearch,
+      query: {
+        bool: {
+          must: [],
+        },
+      },
+    };
+
     const words = query.split(' ');
 
     const clauses = words.map((word) => ({
@@ -67,43 +90,59 @@ export class AppService {
       },
     }));
 
-    const params: SearchRequest = {
-      index: 'comments',
-      sort: { publicationDate: sort },
-      size: rowsPerSearch,
-      from,
-      track_total_hits: rowsPerSearch,
-    };
-
     if (query) {
-      params.query = {
+      (params.query.bool.must as QueryDslQueryContainer[]).push({
         span_near: {
           clauses,
           slop: 12,
           in_order: false,
         },
-      };
+      });
     } else {
-      params.query = {
+      (params.query.bool.must as QueryDslQueryContainer[]).push({
         match_all: {},
-      };
+      });
     }
 
-    if (publicationDateRange)
-      params.query.range = {
-        publicationDate: {
-          gte: publicationDateRange[0],
-          lte: publicationDateRange[1],
-        },
-      };
+    if (publicationDateRange) {
+      const rangeQuery: QueryDslRangeQuery = {};
 
-    const result = await this.elasticsearchService.search(params);
+      if (publicationDateRange.from) rangeQuery.gte = publicationDateRange.from;
+      if (publicationDateRange.to) rangeQuery.lte = publicationDateRange.to;
+
+      (params.query.bool.must as QueryDslQueryContainer[]).push({
+        range: {
+          publicationDate: rangeQuery,
+        },
+      });
+    }
+
+    if (source) {
+      (params.query.bool.must as QueryDslQueryContainer[]).push({
+        match: {
+          source: {
+            query: source,
+          },
+        },
+      });
+    }
+
+    this.logger.debug(`Elasticsearch params ${JSON.stringify(params)}`);
+
+    const result = await this.elasticsearchService.search<Comment>(params);
 
     const comments = result.hits.hits.map((item) => item._source);
 
-    return {
+    const response: Awaited<ReturnType<AppService['getComments']>> = {
       result: comments,
       loadMoreActive: (result.hits.total as SearchTotalHits).relation === 'gte',
     };
+
+    if (getTotalExact) {
+      response.total = (result.hits.total as SearchTotalHits).value;
+      response.perPage = rowsPerSearch;
+    }
+
+    return response;
   }
 }

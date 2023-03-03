@@ -1,5 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
-import { AppService, Comment } from './app.service';
+import { AppService } from './app.service';
+import { Comment } from './types';
 import { Nack, RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 
 @Controller()
@@ -22,17 +23,24 @@ export class AppController {
   })
   public async newComments(data: string) {
     try {
-      await this.appService.saveComments(
-        (JSON.parse(data) as Comment[]).map<Comment>(
-          ({ text, articleLink, articleTitle, publicationDate }) => ({
-            text,
-            articleLink,
-            articleTitle,
-            publicationDate,
-          }),
-        ),
+      const comments = (JSON.parse(data) as Comment[]).map<Comment>(
+        ({ text, articleLink, articleTitle, publicationDate, source }) => ({
+          text,
+          articleLink,
+          articleTitle,
+          publicationDate,
+          source,
+        }),
       );
-      this.logger.log(`Message "new-comments" handled successfully`);
+
+      const result = await this.appService.saveComments(comments);
+
+      this.logger.log(
+        `Message "new-comments" handled successfully. Result: ${JSON.stringify(
+          result,
+        )}`,
+      );
+
       return 'Message delivered';
     } catch (e) {
       this.logger.error(`Failed to handle "new-comments" message`);
