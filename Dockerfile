@@ -4,10 +4,6 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN echo $(ls)
-
-RUN echo aw
-
 RUN npm ci
 RUN npm run build
 RUN rm -rf ./node_modules && npm cache clean --force
