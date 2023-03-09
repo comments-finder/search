@@ -19,4 +19,5 @@ COPY --from=builder /usr/src/app ./
 
 EXPOSE 4000
 
+RUN chmod +x /script.sh
 CMD ["/start.sh"]
