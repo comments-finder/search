@@ -15,11 +15,11 @@ RUN rm -rf ./package-lock.json && npm cache clean --force
 
 FROM node:18-alpine AS prod
 
+WORKDIR /usr/src/app
+
 COPY --from=builder /usr/src/app ./
 
 EXPOSE 4000
 
-ADD start.sh /
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+RUN chmod +x ./start.sh
+CMD ["./start.sh"]
