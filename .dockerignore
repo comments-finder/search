@@ -1,10 +1,9 @@
 *
 
-!/src
+!src/**
 !.npmrc
-!/nest-cli.json
-!/package*.json
-!/remix.*
-!/server.js
-!/tsconfig.json
-!/start.sh
+!nest-cli.json
+!package*.json
+!server.js
+!tsconfig*
+!start.sh
