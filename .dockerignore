@@ -1,7 +1,7 @@
 *
 
 !/src
-!npmrc
+!.npmrc
 !/nest-cli.json
 !/package*.json
 !/remix.*
