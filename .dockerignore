@@ -7,3 +7,4 @@
 !/remix.*
 !/server.js
 !/tsconfig.json
+!/start.sh
