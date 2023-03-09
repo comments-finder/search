@@ -19,4 +19,4 @@ COPY --from=builder /usr/src/app ./
 
 EXPOSE 4000
 
-CMD ["npm", "start:prods"]
+CMD ["/start.sh"]
