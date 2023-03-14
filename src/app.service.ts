@@ -143,7 +143,7 @@ export class AppService {
     try {
       result = await this.elasticsearchService.search<Comment>(params);
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e.toString());
 
       return {
         result: [],

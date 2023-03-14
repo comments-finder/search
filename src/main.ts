@@ -1,10 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {
-  MicroserviceOptions,
-  RmqOptions,
-  Transport,
-} from '@nestjs/microservices';
 import * as process from 'process';
 
 async function bootstrap() {
