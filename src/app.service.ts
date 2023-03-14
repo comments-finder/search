@@ -92,7 +92,6 @@ export class AppService {
           fuzzy: {
             text: {
               value: word,
-              fuzziness: 1,
             },
           },
         },
