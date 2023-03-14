@@ -27,24 +27,33 @@ export class AppService {
       publicationDate,
       source,
     } of comments) {
-      const response = await this.elasticsearchService.index({
-        index: 'comments',
-        id: crypto
-          .createHash('md5')
-          .update(`${text}${articleLink}`)
-          .digest('hex'),
-        document: {
+      try {
+        const document = {
           text,
           articleLink,
           articleTitle,
           publicationDate,
           source,
-        },
-      });
+        };
 
-      result[response.result] =
-        result[response.result] === undefined ? 1 : result[response.result] + 1;
+        const response = await this.elasticsearchService.index({
+          index: 'comments',
+          id: crypto
+            .createHash('md5')
+            .update(`${text}${articleLink}`)
+            .digest('hex'),
+          document,
+        });
+
+        result[response.result] =
+          result[response.result] === undefined
+            ? 1
+            : result[response.result] + 1;
+      } catch (e) {
+        this.logger.error(e);
+      }
     }
+
     return result;
   }
 
@@ -129,7 +138,18 @@ export class AppService {
 
     this.logger.debug(`Elasticsearch params ${JSON.stringify(params)}`);
 
-    const result = await this.elasticsearchService.search<Comment>(params);
+    let result;
+
+    try {
+      result = await this.elasticsearchService.search<Comment>(params);
+    } catch (e) {
+      this.logger.error(e);
+
+      return {
+        result: [],
+        loadMoreActive: false,
+      };
+    }
 
     const comments = result.hits.hits.map((item) => item._source);
 
