@@ -141,6 +141,9 @@ export class AppService {
 
     try {
       result = await this.elasticsearchService.search<Comment>(params);
+      this.logger.debug(
+        `Elasticsearch result: ${result.hits.hits.length} items`,
+      );
     } catch (e) {
       this.logger.error(e.toString());
 
