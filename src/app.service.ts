@@ -91,7 +91,7 @@ export class AppService {
         match: {
           fuzzy: {
             text: {
-              value: word,
+              value: word.toLowerCase(),
             },
           },
         },
@@ -129,7 +129,7 @@ export class AppService {
       (params.query.bool.must as QueryDslQueryContainer[]).push({
         match: {
           source: {
-            query: source,
+            query: source.toLowerCase(),
           },
         },
       });
