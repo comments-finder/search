@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { QueueController } from './queue.controller';
+import { CommentsService } from './comments.service';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { ELASTICSEARCH_URI, RABBITMQ_URI } from './config';
 import { ElasticsearchModule } from '@nestjs/elasticsearch';
@@ -36,7 +36,7 @@ import { HttpController } from './http.controller';
       node: ELASTICSEARCH_URI,
     }),
   ],
-  controllers: [AppController, HttpController],
-  providers: [AppService],
+  controllers: [QueueController, HttpController],
+  providers: [CommentsService],
 })
 export class AppModule {}
