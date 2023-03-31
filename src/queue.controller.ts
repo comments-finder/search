@@ -1,13 +1,13 @@
 import { Controller, Logger } from '@nestjs/common';
-import { AppService } from './app.service';
+import { CommentsService } from './comments.service';
 import { Comment } from './types';
 import { Nack, RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 
 @Controller()
-export class AppController {
-  private readonly logger = new Logger(AppController.name);
+export class QueueController {
+  private readonly logger = new Logger(QueueController.name);
 
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly commentsService: CommentsService) {}
 
   @RabbitRPC({
     exchange: 'comments',
@@ -33,7 +33,7 @@ export class AppController {
         }),
       );
 
-      const result = await this.appService.saveComments(comments);
+      const result = await this.commentsService.saveComments(comments);
 
       this.logger.log(
         `Message "new-comments" handled successfully. Result: ${JSON.stringify(

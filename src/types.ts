@@ -7,3 +7,10 @@ export interface Comment {
   publicationDate: Date;
   source: Source;
 }
+
+export interface GetCommentsReturnType {
+  result: Comment[];
+  loadMoreActive: boolean;
+  total?: number;
+  perPage?: number;
+}
