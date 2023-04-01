@@ -9,6 +9,7 @@ import { HttpController } from './http.controller';
 @Module({
   imports: [
     RabbitMQModule.forRoot(RabbitMQModule, {
+      connectionInitOptions: { wait: false },
       exchanges: [
         {
           name: 'comments',

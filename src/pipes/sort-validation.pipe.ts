@@ -2,9 +2,10 @@ import { SortOrder } from '@elastic/elasticsearch/lib/api/types';
 import { PipeTransform, BadRequestException } from '@nestjs/common';
 
 export class SortValidationPipe implements PipeTransform {
-  transform(sortOrder: SortOrder) {
+  transform(sortOrder: SortOrder | '') {
     if (
       sortOrder !== undefined &&
+      sortOrder !== '' &&
       sortOrder !== 'asc' &&
       sortOrder !== 'desc'
     ) {
