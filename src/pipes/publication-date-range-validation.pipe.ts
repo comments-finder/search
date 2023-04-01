@@ -7,11 +7,13 @@ export default class PublicationDateRangePipe implements PipeTransform {
     const { publicationDateFrom, publicationDateTo } = value;
 
     const fromIsValid =
-      !publicationDateFrom ||
+      publicationDateFrom === '' ||
+      publicationDateFrom === undefined ||
       moment(publicationDateFrom, moment.ISO_8601, true).isValid();
 
     const toIsValid =
-      !publicationDateTo ||
+      publicationDateTo === '' ||
+      publicationDateTo === undefined ||
       moment(publicationDateTo, moment.ISO_8601, true).isValid();
 
     if (

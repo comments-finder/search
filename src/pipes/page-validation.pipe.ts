@@ -4,6 +4,7 @@ export class PageValidationPipe implements PipeTransform {
   transform(page: string) {
     if (
       page !== undefined &&
+      page !== '' &&
       !(
         Number.isInteger(parseInt(page as string)) &&
         parseInt(page as string) >= 0
