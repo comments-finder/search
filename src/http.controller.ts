@@ -32,7 +32,7 @@ export class HttpController {
     const comments = await this.commentsService.getComments(
       query as string,
       source as Source,
-      sort as SortOrder,
+      (sort || 'desc') as SortOrder,
       parseInt(page as string),
       {
         from: publicationDateFrom as string,
